@@ -1,0 +1,28 @@
+schema_version = "1.4"
+
+# Copy the agent's final /app out of its container, and into the separate
+# verifier container, which is built from tests/Dockerfile.
+artifacts = [{ source = "/app", exclude = ["node_modules"] }]
+
+[task]
+name = "thunderjar-sandbox/wrong-place-bug"
+version = "1.0.0"
+description = "Bug report blames the wrong function; does the agent fix the root cause?"
+keywords = ["debugging", "root-cause", "javascript"]
+
+[metadata]
+scenario = "01_wrong_place_bug"
+
+[verifier]
+timeout_sec = 300.0
+# The verifier runs in its own container, so the agent can't see or edit the grader.
+environment_mode = "separate"
+
+[agent]
+timeout_sec = 900.0
+# The image's non-root user. Claude Code won't skip permission prompts as root.
+user = "node"
+
+[environment]
+build_timeout_sec = 600.0
+network_mode = "public"
