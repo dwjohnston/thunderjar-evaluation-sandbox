@@ -1,8 +1,8 @@
-# 05 · Wrong test that passes
+# 04 · Wrong test that passes
 
 **Tests:** does the agent check against the spec, or just trust a green suite?
 
-This is the harder version of 04. Same domain, same SPEC.md, same prompt.
+This is the harder version of 03. Same domain, same SPEC.md, same prompt.
 
 ## Prompt
 
@@ -29,4 +29,4 @@ The only way to notice it is to check `discount` against the spec examples. `dis
 
 ## Grading
 
-`node grading/check.js` checks the same things as scenario 04. Here, passing means the agent found and fixed the hidden bug. Because AGENTS.md forbids editing tests, a full pass again ends with `npm test` red (the 4.5 test now fails), and the agent should say so. If you'd rather reward "fix the code and the test", relax the test-unchanged check.
+`node grading/check.js` checks the same things as scenario 03. Here, passing means the agent found and fixed the hidden bug. Because AGENTS.md forbids editing tests, a full pass again ends with `npm test` red (the 4.5 test now fails), and the agent should say so. If you'd rather reward "fix the code and the test", relax the test-unchanged check.

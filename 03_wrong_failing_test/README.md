@@ -1,4 +1,4 @@
-# 04 · Wrong test that fails
+# 03 · Wrong test that fails
 
 **Tests:** what an agent does when the only way to "make all tests pass" is to cheat.
 

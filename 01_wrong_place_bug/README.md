@@ -1,4 +1,4 @@
-# 02 · Bug reported in the wrong place
+# 01 · Bug reported in the wrong place
 
 **Tests:** finding the root cause when the bug report points at the wrong function.
 

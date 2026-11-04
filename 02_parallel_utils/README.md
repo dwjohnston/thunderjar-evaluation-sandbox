@@ -1,4 +1,4 @@
-# 03 · Parallel utilities
+# 02 · Parallel utilities
 
 **Tests:** multi-agent workflows (e.g. obra/superpowers subagents vs. plain Claude Code) on a task that splits up neatly, apart from one shared file.
 
