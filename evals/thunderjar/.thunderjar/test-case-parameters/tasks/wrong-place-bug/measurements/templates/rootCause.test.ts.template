@@ -1,0 +1,24 @@
+import { {{defaultExport}} } from "{{subjectPath}}";
+// Rendered next to src/totals.js, so this is src/summary.js.
+import { cartSummary } from "./summary.js";
+
+const cart = () => [
+  { name: "Coffee", price: 4 },
+  { name: "Bagel", price: 3 },
+  { name: "Juice", price: 5 },
+];
+
+test("calculateTotal does not mutate its input", () => {
+  const items = cart();
+  expect({{defaultExport}}(items)).toBe(9);
+  expect(items).toEqual(cart());
+});
+
+test("cartSummary reports the last item added", () => {
+  const items = [
+    { name: "Coffee", price: 4 },
+    { name: "Juice", price: 5 },
+    { name: "Bagel", price: 3 },
+  ];
+  expect(cartSummary(items)).toBe("3 items, $9 (last added: Bagel)");
+});

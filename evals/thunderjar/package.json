@@ -1,0 +1,14 @@
+{
+  "name": "eval-thunderjar",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "thunderjar generate",
+    "plan": "thunderjar plan wrong-place-bug",
+    "run": "thunderjar run wrong-place-bug",
+    "executions": "thunderjar executions"
+  },
+  "devDependencies": {
+    "thunderjar": "^0.1.3-preview-73f04c4"
+  }
+}
