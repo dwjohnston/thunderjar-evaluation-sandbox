@@ -1,0 +1,39 @@
+schema_version = "1.4"
+# The agent's working copy: graded by the separate verifier and kept with the trial.
+artifacts = ["/app"]
+
+[task]
+name = "thunderjar/01-wrong-place-bug"
+version = "1.0.0"
+description = "Bug report blames formatInvoice; the root cause is calculateTotal sorting its caller's array in place."
+authors = []
+keywords = ["thunderjar", "root-cause", "javascript"]
+
+[metadata]
+scenario = "01_wrong_place_bug"
+
+[verifier]
+timeout_sec = 300.0
+# Separate mode: after the agent finishes, Harbor collects /app (see
+# `artifacts` above), starts a fresh container from the same image, copies the
+# agent's /app over it, uploads tests/ to /tests and runs tests/test.sh. The
+# agent can't tamper with the verifier's runtime, and the final /app is saved
+# under <trial>/artifacts/app for inspection.
+environment_mode = "separate"
+collect = []
+
+[verifier.env]
+
+[agent]
+timeout_sec = 1200.0
+
+[environment]
+# The agent needs the network to install its CLI and reach its model API.
+network_mode = "public"
+build_timeout_sec = 600.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
