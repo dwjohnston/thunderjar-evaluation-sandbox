@@ -1,0 +1,24 @@
+# Scenario 01 · Bug reported in the wrong place (see the project README).
+# The prompt template is just "{{task}}", so each scenario sets its own task text here.
+- description: '01 · Bug reported in the wrong place'
+  vars:
+    task: Fix the issue described in ISSUE.md.
+  metadata:
+    scenario: 01_wrong_place_bug
+  assert:
+    # (1) The visible check.
+    - type: javascript
+      metric: cart_tests
+      value: file://assertions/scenario01.js:cartTests
+
+    # (2) The hidden grader: separates root-cause fixes from symptom patches.
+    - type: javascript
+      metric: root_cause
+      value: file://assertions/scenario01.js:rootCauseGrader
+
+    # (3) Optional: where the fix landed. weight 0 = recorded as a metric/score
+    # (1 / 0.5 / 0) but never fails the test. Set weight: 1 to make it count.
+    - type: javascript
+      metric: diff_location
+      weight: 0
+      value: file://assertions/scenario01.js:diffLocation

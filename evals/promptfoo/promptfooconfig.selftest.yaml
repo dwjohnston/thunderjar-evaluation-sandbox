@@ -1,0 +1,31 @@
+# Offline self-test of the harness: same provider wrapper, workspace isolation, test cases and
+# assertions as promptfooconfig.yaml, but the "agents" are scripted fakes that apply a known fix,
+# so no API key is needed. Run via `npm run selftest`, which also checks the expected verdicts.
+description: thunderjar · 01 · harness self-test (scripted agents)
+
+prompts:
+  - '{{task}}'
+
+providers:
+  - id: file://providers/isolated-agent.js
+    label: fake-root-cause-fix
+    config:
+      command: sh "$SELFTEST_AGENTS/root-cause-fix.sh"
+  - id: file://providers/isolated-agent.js
+    label: fake-symptom-patch
+    config:
+      command: sh "$SELFTEST_AGENTS/symptom-patch.sh"
+  - id: file://providers/isolated-agent.js
+    label: fake-both-files
+    config:
+      command: sh "$SELFTEST_AGENTS/both-files.sh"
+  - id: file://providers/isolated-agent.js
+    label: fake-noop
+    config:
+      command: sh "$SELFTEST_AGENTS/noop.sh"
+
+tests:
+  - file://cases/01_wrong_place_bug.yaml
+
+extensions:
+  - file://hooks/cleanup.js:afterAll

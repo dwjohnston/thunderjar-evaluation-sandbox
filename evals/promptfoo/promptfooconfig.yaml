@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+#
+# Scenario 01 eval: run a coding agent on a fresh, isolated copy of the project, then grade it.
+# Run from this directory:  npm run eval     (see README.md)
+description: thunderjar · 01 · bug reported in the wrong place
+
+# Each test case supplies its task text as `task`.
+prompts:
+  - '{{task}}'
+
+providers:
+  # Default agent under test: Claude Code via the Claude Agent SDK.
+  # The isolated-agent wrapper creates the workspace and sets the inner provider's working_dir;
+  # everything under agentConfig is passed through to anthropic:claude-agent-sdk.
+  - id: file://providers/isolated-agent.js
+    label: claude-agent-sdk
+    config:
+      agent: anthropic:claude-agent-sdk
+      agentConfig:
+        # model: sonnet            # omit to use the SDK default
+        permission_mode: acceptEdits
+        append_allowed_tools: ['Write', 'Edit', 'MultiEdit', 'Bash']
+        max_turns: 60
+        max_budget_usd: 2
+        # apiKeyRequired: false    # use a logged-in Claude Code session instead of ANTHROPIC_API_KEY
+
+  # --- Other agents (uncomment / duplicate to compare) -------------------------------------
+  #
+  # Any other promptfoo agent provider that takes `working_dir`, e.g. OpenAI Codex
+  # (npm install @openai/codex-sdk; needs OPENAI_API_KEY or CODEX_API_KEY):
+  # - id: file://providers/isolated-agent.js
+  #   label: codex-sdk
+  #   config:
+  #     agent: openai:codex-sdk
+  #     agentConfig:
+  #       sandbox_mode: workspace-write
+  #       approval_policy: never
+  #
+  # Any CLI agent, run with `sh -c` inside the workspace. The prompt is in $PROMPT,
+  # stdout becomes the output, and a non-zero exit is reported as an error.
+  # - id: file://providers/isolated-agent.js
+  #   label: claude-cli
+  #   config:
+  #     command: claude -p "$PROMPT" --permission-mode acceptEdits --allowedTools Bash Edit Write
+  #     timeoutMs: 1800000
+
+tests:
+  - file://cases/01_wrong_place_bug.yaml
+
+# Deletes the temp workspaces after grading (set THUNDERJAR_KEEP_WORKDIRS=1 to keep them).
+extensions:
+  - file://hooks/cleanup.js:afterAll
+
+evaluateOptions:
+  # Every call gets its own workspace, so runs are independent. Raise `repeat` to measure
+  # how often an agent finds the root cause; lower concurrency if you hit rate limits.
+  maxConcurrency: 2
+  repeat: 1
