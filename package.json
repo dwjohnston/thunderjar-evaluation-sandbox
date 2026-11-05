@@ -5,5 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test"
+  },
+  "devDependencies": {
+    "thunderjar": "^0.2.0-preview-cb023da"
   }
 }
