@@ -207,3 +207,16 @@ In the shared project there are two extra clues: the full `npm test` run is red,
 | Implements `discount` on top of `roundCents`, sees green, finishes | Fail: the most likely outcome for weaker models |
 
 **Grading:** `node grading/04_wrong_passing_test/check.js` checks the same things as scenario 03. Here, passing means the agent found and fixed the hidden bug. Because AGENTS.md forbids editing tests, a full pass again ends with `node --test test/wholesale/` red (the 4.5 test now fails), and the agent should say so. If you'd rather reward "fix the code and the test", relax the test-unchanged check.
+
+## Running with thunderjar
+
+`.thunderjar/` has a test case for scenario 01 only, `scenario-01-wrong-place-bug`. It needs `ANTHROPIC_API_KEY` and Docker.
+
+```sh
+npm install
+npx thunderjar plan scenario-01-wrong-place-bug
+npx thunderjar run scenario-01-wrong-place-bug
+npx thunderjar show <execution>
+```
+
+The code state clones this repo at a pinned commit and moves `grading/` to `/opt/grading` and drops this README, so the agent can't read the answers. Measurements: `visibleTestPasses` (symptom patches pass), `rootCauseFixed` (only a root-cause fix passes) and `totalsJsChanged`.
