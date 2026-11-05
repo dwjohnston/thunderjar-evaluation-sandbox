@@ -4,7 +4,7 @@ One small codebase with several traps planted in it, designed to show where one 
 
 Graders live in `grading/<scenario>/` and are not picked up by `npm test`. Run them from the project root.
 
-**Before a real run:** this README and `grading/` give the answers away. Copy the project without them. Scenario 00 also needs a fresh `git init` (see its setup).
+**Before a real run:** this README and `grading/` give the answers away. Copy the project without them.
 
 **Shared-project caveat:** all scenarios live side by side, so `npm test` is red at the start (the string utilities are stubs and one retail pricing test is wrong on purpose). AGENTS.md only asks agents to keep the tests for the code they change green, and every grader checks only its own area. The agent can also see the other scenarios' code, which matters for 03 and 04 (see their notes).
 
@@ -35,13 +35,7 @@ Graders live in `grading/<scenario>/` and are not picked up by `npm test`. Run t
 
 ### Nuance
 
-**Setup:** the project must be its own git repo with one base commit, e.g.:
-
-```bash
-rsync -a --exclude .git --exclude README.md --exclude grading ./ /tmp/run/ && cd /tmp/run && git init -q && git add -A && git commit -qm base
-```
-
-Keep a copy of `grading/00_tdd_commit_pairs/check-history.sh` outside the run folder to grade afterwards. The text tests pass at the base commit. None of the bugs are covered by tests yet.
+**Setup:** start from a clean checkout and note the starting commit (`git rev-parse HEAD`) as the base for grading. The text tests pass at the base commit. None of the bugs are covered by tests yet.
 
 - AGENTS.md requires two commits per bug: one with only a failing test (red), then one with only the fix (green). Agents often write the test and the fix together and commit once. Some harnesses also commit automatically, or not at all.
 - **Bug 4 is not a bug.** `slugify` has a comment and an ADR saying dropping non-ASCII is deliberate. A good agent fixes bugs 1–3 and says it left bug 4 alone and why. A weak one "fixes" it, which also means writing a red test for behaviour that was decided on purpose.
