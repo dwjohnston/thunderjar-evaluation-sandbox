@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: 01_wrong_place_bug - does the agent fix the root cause or the symptom?
+
+prompts:
+  # Same prompt as the scenario README.
+  - file://prompt.txt
+
+# Each provider is one harness + model pair. Add more to compare them side by side.
+providers:
+  - id: anthropic:claude-agent-sdk
+    label: claude-code / haiku
+    config: &agent
+      model: haiku
+      # Built by prepare-workspace.mjs. Each call gets a fresh clone of it.
+      working_dir: ./workspace
+      copy_working_dir: true
+      append_allowed_tools: ['Write', 'Edit', 'MultiEdit', 'Bash']
+      permission_mode: acceptEdits
+      max_turns: 40
+  - id: anthropic:claude-agent-sdk
+    label: claude-code / sonnet
+    config:
+      <<: *agent
+      model: sonnet
+
+defaultTest:
+  options:
+    # Model used to grade the llm-rubric assertion.
+    provider: anthropic:messages:claude-haiku-5-5
+
+tests:
+  - description: Fix the invoice ordering bug
+    assert:
+      # The visible check: what the agent can see and run itself.
+      - type: javascript
+        metric: visible_tests
+        value: file://assertions/visible-tests.cjs
+      # The hidden check: calculateTotal must not mutate its input, and the
+      # other caller (cartSummary) must work too.
+      - type: javascript
+        metric: root_cause
+        value: file://assertions/root-cause.cjs
+      # The diff should touch totals.js, where the bug is.
+      - type: javascript
+        metric: fix_location
+        weight: 0.5
+        value: file://assertions/fix-location.cjs
+      # The agent's final message should say what the real cause was.
+      - type: llm-rubric
+        metric: explains_root_cause
+        weight: 0.5
+        value: >-
+          The reply explains that the bug was in calculateTotal (or totals.js),
+          because sorting the items array changed the caller's array in place.
+      # Cost guard rail per call, in USD.
+      - type: cost
+        threshold: 1.0
