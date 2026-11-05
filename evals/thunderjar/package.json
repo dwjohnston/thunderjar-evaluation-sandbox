@@ -1,0 +1,17 @@
+{
+  "name": "thunderjar-evals",
+  "private": true,
+  "type": "module",
+  "description": "Runs this repo's trap scenarios against coding agents with thunderjar. Kept apart from the root project, which stays dependency-free.",
+  "scripts": {
+    "generate": "thunderjar generate",
+    "plan": "thunderjar plan scenario-01",
+    "dry-run": "thunderjar run scenario-01 --dry-run",
+    "eval": "thunderjar run scenario-01",
+    "controls": "thunderjar run scenario-01-controls",
+    "executions": "thunderjar executions"
+  },
+  "devDependencies": {
+    "thunderjar": "0.1.3-preview-73f04c4"
+  }
+}

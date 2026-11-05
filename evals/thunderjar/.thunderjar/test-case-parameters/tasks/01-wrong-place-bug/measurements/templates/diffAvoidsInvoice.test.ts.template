@@ -1,0 +1,15 @@
+// Rendered into /workspace/.thunderjar-probe/ by thunderjar's templateTest, run with `bun test`.
+// {{defaultExport}} is the probe's one export: the commit the agent started from.
+import { expect, test } from "bun:test";
+import { {{defaultExport}} as baseCommit } from "{{subjectPath}}";
+
+/** Tracked files that differ between the base commit and the working tree: committed or not. */
+function changedFiles(): string[] {
+  const result = Bun.spawnSync(["git", "diff", "--name-only", baseCommit], { cwd: "/workspace", stdout: "pipe", stderr: "pipe" });
+  if (result.exitCode !== 0) throw new Error(`git diff failed: ${result.stderr.toString()}`);
+  return result.stdout.toString().split("\n").filter(Boolean);
+}
+
+test("the diff leaves src/cart/invoice.js alone", () => {
+  expect(changedFiles()).not.toContain("src/cart/invoice.js");
+});

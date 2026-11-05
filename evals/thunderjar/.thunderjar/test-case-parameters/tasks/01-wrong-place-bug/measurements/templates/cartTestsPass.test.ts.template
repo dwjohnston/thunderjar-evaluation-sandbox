@@ -1,0 +1,14 @@
+// Rendered into /workspace/.thunderjar-probe/ by thunderjar's templateTest, run with `bun test`.
+//
+// The criterion is "`node --test test/cart/` passes", but on Node 22 `node --test <dir>` doesn't
+// search the folder: it tries to load test/cart as a module and always fails. So this runs every
+// test file under test/cart/ by glob instead, and also fails if that finds no tests.
+import { expect, test } from "bun:test";
+
+test("the tests in test/cart/ pass", () => {
+  const result = Bun.spawnSync(["node", "--test", "test/cart/**/*.{js,mjs,cjs}"], { cwd: "/workspace", stdout: "pipe", stderr: "pipe" });
+  const output = result.stdout.toString();
+  if (result.exitCode !== 0) console.log(output, result.stderr.toString());
+  expect(result.exitCode).toBe(0);
+  expect(Number(/^# tests (\d+)$/m.exec(output)?.[1] ?? 0)).toBeGreaterThan(0);
+});
