@@ -1,0 +1,22 @@
+{
+  "name": "thunderjar-agent-eval",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runs the sandbox scenarios against coding agents with @vercel/agent-eval",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build-fixtures.mjs",
+    "eval": "node scripts/run.mjs scenario-01",
+    "eval:dry": "node scripts/run.mjs scenario-01 --dry",
+    "eval:smoke": "node scripts/run.mjs scenario-01 --smoke",
+    "selftest": "node scripts/selftest.mjs",
+    "playground": "agent-eval playground --results-dir .work/results --evals-dir .work/evals"
+  },
+  "devDependencies": {
+    "@vercel/agent-eval": "2.6.0",
+    "vitest": "^3.2.7"
+  }
+}
