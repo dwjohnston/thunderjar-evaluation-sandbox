@@ -1,12 +1,14 @@
-import { declareConfig, sqliteStore } from "thunderjar";
+import { declareConfig, postgresStore } from "thunderjar";
 
 export default declareConfig({
-  // Images stay in the local Docker daemon. To push them to a registry, name its repository,
-  // e.g. { repository: "ghcr.io/your-org/thunderjar-images" }, and `docker login` to it.
-  imageStore: null,
-  // Run results go to a local SQLite file. To share them between machines, e.g. CI and your
-  // laptop, use a Postgres database instead, with its URL in an environment variable:
-  //   runDataStore: postgresStore({ urlEnv: "THUNDERJAR_DB_URL" }),
-  // and import postgresStore from "thunderjar".
-  runDataStore: sqliteStore({ path: "./.thunderjar/.data/runs.sqlite" }),
+  // Prerun and postrun images are pushed here. Needs `docker login ghcr.io` with a token
+  // that has the write:packages scope.
+  imageStore: { repository: "ghcr.io/blacksheep-bot/thunderjar-images" },
+  // Run results go to Supabase Postgres. Export its connection URL in the shell that runs
+  // thunderjar, e.g. postgres://postgres.<ref>:$SUPERBASE_PASSWORD@<host>:5432/postgres
+  runDataStore: postgresStore({ urlEnv: "THUNDERJAR_DB_URL" }),
+  // Containers run on a Docker daemon on Fly.io (app thunderjar-runtime-dwj, in syd).
+  // The script starts the machine and a `fly proxy` to it as needed. Use `run --local`
+  // to run on this machine instead.
+  runtime: { command: ["./.thunderjar/fly-docker.sh"] },
 });
