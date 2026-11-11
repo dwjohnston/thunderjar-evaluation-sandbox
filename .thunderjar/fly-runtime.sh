@@ -25,6 +25,9 @@ fly_() {
   printf '%s\n' "$out"
 }
 
+# Closes fly-docker.sh's shared SSH connection, if it's open: the machine is about to restart or stop.
+disconnect() { ssh -F "/tmp/tjfly-$APP/ssh_config" -O exit tjfly >/dev/null 2>&1 || true; }
+
 # The machine's ID, state, CPU kind and CPUs, tab-separated.
 read -r ID STATE KIND CPUS < <(fly_ machine list -a "$APP" --json |
   jq -r '.[0] | [.id, .state, .config.guest.cpu_kind, .config.guest.cpus] | @tsv')
@@ -43,11 +46,13 @@ case "${1:-}" in
       echo "$ID is already performance-${cpus}x"
     else
       # Restarts the machine, or starts it if it was stopped.
+      disconnect
       fly_ machine update "$ID" -a "$APP" --vm-size "performance-${cpus}x" --vm-memory $((cpus * 2048)) --yes >/dev/null
       echo "$ID resized to performance-${cpus}x for $at_once containers at once"
     fi
     ;;
   down)
+    disconnect
     [ "$STATE" != started ] || fly_ machine stop -a "$APP" "$ID" >/dev/null
     echo "$ID stopped"
     ;;
