@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "skills": {
+    "tj-config": {
+      "source": "dwjohnston/thunderjar",
+      "sourceType": "github",
+      "skillPath": "skills/tj-config/SKILL.md",
+      "computedHash": "7b3fda6a835a226456d287e87ae622cdbc9f182cb2c87feb2a440a1bc305de22"
+    },
+    "tj-eval": {
+      "source": "dwjohnston/thunderjar",
+      "sourceType": "github",
+      "skillPath": "skills/tj-eval/SKILL.md",
+      "computedHash": "d5e639e43dd40034d474fa58f33c7fa71fed3bcec25079dd1da0239196179f3b"
+    },
+    "tj-quick-capture": {
+      "source": "dwjohnston/thunderjar",
+      "sourceType": "github",
+      "skillPath": "skills/tj-quick-capture/SKILL.md",
+      "computedHash": "265d036aaca306eb1fd4091b9e5ae827cacb540eeaa7b7a7ef320b74cbdb94df"
+    }
+  }
+}
