@@ -1,8 +1,8 @@
 import { declareHarness } from "thunderjar";
 
-// OpenCode, on OpenCode Zen. OPENCODE_API_KEY is an OpenCode Zen key.
-// A test case names a model by the ID the agent takes, e.g. "opencode-1.19.5/opencode/claude-haiku-5-5", "opencode-1.19.5/opencode/gpt-5.5".
-// Models come and go: check https://opencode.ai/zen/v1/models for the current IDs.
+// OpenCode, on OpenRouter. OpenCode's built-in openrouter provider reads OPENROUTER_API_KEY itself.
+// A test case names a model as "openrouter/" plus its OpenRouter ID, e.g. "opencode-1.19.5/openrouter/anthropic/claude-haiku-5.5".
+// Models come and go: check https://openrouter.ai/models for the current IDs.
 export default declareHarness({
   version: "1.19.5",
   applyParameter: (_config, ctx) => `RUN npm install -g opencode-ai@${ctx.version}
@@ -17,5 +17,5 @@ USER node`,
   // costs, read them from what `cli` wrote to its result path:
   // collectReply: (raw) => …,
   // collectTokenCosts: (raw, ctx) => ({ outcome: "collected", models: [{ model: ctx.modelId, … }] }),
-  requiredEnv: ["OPENCODE_API_KEY"],
+  requiredEnv: ["OPENROUTER_API_KEY"],
 });
