@@ -10,5 +10,7 @@ export default declareConfig({
   // Containers run on a Docker daemon on Fly.io (app thunderjar-runtime-dwj, in syd).
   // The script starts the machine and a `fly proxy` to it as needed. Use `run --local`
   // to run on this machine instead.
-  runtime: { command: ["./.thunderjar/fly-docker.sh"] },
+  // Up to 2 containers run on it at once: it has 2 shared CPUs and 4 GB of memory. Raise it if
+  // the machine is scaled up; `run --concurrency <n>` overrides it for one run.
+  runtime: { command: ["./.thunderjar/fly-docker.sh"], concurrency: 2 },
 });
