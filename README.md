@@ -244,7 +244,7 @@ If skills stack, expect:
 
 The repository root's `AGENTS.md` is about the other scenarios. A harness that loads it as well sees unrelated instructions.
 
-**Grading:** the Thunderjar test case `nested-skills-working-directory` runs the prompt in all three folders, in Claude Code, Copilot CLI and OpenCode, on Haiku 5.5. Its three code states clone the same commit and differ only in their `WORKDIR`. It measures which emojis each reply has and which `a.ts` it describes. It needs `ANTHROPIC_API_KEY`, `COPILOT_GITHUB_TOKEN` and `OPENCODE_API_KEY`.
+**Grading:** the Thunderjar test case `nested-skills-working-directory` runs the prompt in all three folders, in Claude Code, Copilot CLI and OpenCode, on Haiku 5.5. Its three code states clone the same commit and differ only in their `WORKDIR`. It measures which emojis each reply has and which `a.ts` it describes. It needs `ANTHROPIC_API_KEY` for Claude Code, and `OPENROUTER_API_KEY` for Copilot and OpenCode, which both run on OpenRouter.
 
 From the project root:
 

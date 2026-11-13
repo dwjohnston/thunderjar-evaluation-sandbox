@@ -1,10 +1,8 @@
 import { declareHarness, type TokenCosts, writeModel, writeRunScript } from "thunderjar";
 
-// OpenCode, on OpenCode Zen. OPENCODE_API_KEY is an OpenCode Zen key.
-// A test case names a model by the ID the agent takes, e.g. "opencode-1.19.5/opencode/claude-haiku-5-5".
-//
-// The reply and token parsing are ported from Thunderjar's own opencode-1.19.5 harness, which runs
-// OpenCode on OpenRouter instead. This one keeps OpenCode Zen.
+// OpenCode, on OpenRouter. OpenCode's built-in openrouter provider reads OPENROUTER_API_KEY itself.
+// A test case names a model as "openrouter/" plus its OpenRouter ID, e.g. "opencode-1.19.5/openrouter/anthropic/claude-haiku-5.5".
+// Models come and go: check https://openrouter.ai/models for the current IDs.
 
 // `opencode run --format json` writes one JSON event per line: {type, timestamp, sessionID, part}.
 // The reply is in "text" events and the tokens in "step_finish" events, one per model call. Only the
@@ -41,13 +39,13 @@ function opencodeReply(raw: string): string {
 /**
  * Every step's tokens, summed. OpenCode already takes cached tokens out of `input`, but it takes
  * reasoning out of `output`, so reasoning is added back: it's billed as output. Its `cost` is its
- * own estimate in dollars, from the models.dev price table, not what the provider charged.
+ * own estimate in dollars, from the models.dev price table, not what OpenRouter charged.
  */
 function opencodeTokenCosts(raw: string, ctx: { modelId: string }): TokenCosts {
   const all = events(raw);
   const steps = all.filter((e) => e.type === "step_finish");
-  // OpenCode's events, but no step finished, e.g. its first model call failed: it reported no
-  // tokens. Only output with no events at all is unparseable.
+  // OpenCode's events, but no step finished, e.g. its first model call failed (OpenRouter's 402,
+  // out of credits): it reported no tokens. Only output with no events at all is unparseable.
   if (steps.length === 0) return { outcome: "unavailable", reason: all.length > 0 ? "notReported" : "unparseable" };
   let inputTokens = 0, outputTokens = 0, cacheReadTokens = 0, cacheCreationTokens = 0, costUsd = 0;
   for (const { part } of steps) {
@@ -90,5 +88,5 @@ export default declareHarness({
     ].join("\n"),
   collectReply: opencodeReply,
   collectTokenCosts: opencodeTokenCosts,
-  requiredEnv: ["OPENCODE_API_KEY"],
+  requiredEnv: ["OPENROUTER_API_KEY"],
 });

@@ -1,11 +1,11 @@
 import { declareHarness, type ModelTokenCosts, type TokenCosts, writeModel, writeRunScript } from "thunderjar";
 
-// GitHub Copilot CLI. COPILOT_GITHUB_TOKEN is a GitHub token with Copilot access: a fine-grained
-// personal access token with the "Copilot Requests" permission.
-// A test case names a model by the ID the agent takes, e.g. "copilot-1.0.105/claude-haiku-5.5".
-//
-// The reply and token parsing are ported from Thunderjar's own copilot-1.0.105 harness, which runs
-// Copilot on OpenRouter instead. This one keeps Copilot's own GitHub auth and model routing.
+// GitHub Copilot CLI, in BYOK mode on OpenRouter: setting COPILOT_PROVIDER_BASE_URL makes it skip
+// GitHub auth and Copilot's model routing. It needs OPENROUTER_API_KEY.
+// A test case names a model by its OpenRouter ID, e.g. "copilot-1.0.105/anthropic/claude-haiku-5.5".
+// The part after the last "/" is also given as the well-known model ID, so Copilot applies its
+// model-specific settings (tool support, token limits). Run `copilot help providers` for the details.
+// Models come and go: check https://openrouter.ai/models for the current IDs.
 
 // Copilot's JSONL output (`--output-format json`) leaves out its token events, so the run script also has it
 // write its usage statistics to a file, and appends them to the result file as one more line:
@@ -64,6 +64,13 @@ function copilotTokenCosts(raw: string): TokenCosts {
   return { outcome: "collected", models, ...(apiDurationMs !== undefined && { apiDurationMs }) };
 }
 
+/**
+ * OpenAI's models get OpenRouter's Responses API. On Chat Completions, Copilot sends a tool without
+ * a `name`, and OpenAI rejects every request: 400 "Missing required parameter: 'tools[4].name'"
+ * (gauntlet smoke run 6, openai/gpt-6.1-sol). Other providers keep Copilot's default.
+ */
+const wireApi = (modelId: string) => (modelId.startsWith("openai/") ? " COPILOT_PROVIDER_WIRE_API=responses" : "");
+
 export default declareHarness({
   version: "1.0.105",
   applyParameter: (_config, ctx) =>
@@ -81,7 +88,9 @@ export default declareHarness({
       // Copilot's exit code is kept as the script's, after the usage line is appended.
       writeRunScript(
         `rm -f ${USAGE_FILE}; ` +
-          `copilot -p "$(cat /thunderjar/prompt.txt)" --model "$(cat /thunderjar/model.txt)" --allow-all-tools --no-color` +
+          `COPILOT_PROVIDER_BASE_URL=https://openrouter.ai/api/v1 COPILOT_PROVIDER_API_KEY="$OPENROUTER_API_KEY"` +
+          ` COPILOT_PROVIDER_MODEL_ID=${ctx.modelId.split("/").pop()}${wireApi(ctx.modelId)}` +
+          ` copilot -p "$(cat /thunderjar/prompt.txt)" --model "$(cat /thunderjar/model.txt)" --allow-all-tools --no-color` +
           ` --output-format json --usage-output-file ${USAGE_FILE} > /thunderjar/result.json; code=$?; ` +
           `[ -f ${USAGE_FILE} ] && printf '{"type":"${USAGE_TYPE}","data":%s}\\n' "$(tr -d '\\n' < ${USAGE_FILE})" >> /thunderjar/result.json; ` +
           `exit $code`,
@@ -90,5 +99,5 @@ export default declareHarness({
     ].join("\n"),
   collectReply: copilotReply,
   collectTokenCosts: copilotTokenCosts,
-  requiredEnv: ["COPILOT_GITHUB_TOKEN"],
+  requiredEnv: ["OPENROUTER_API_KEY"],
 });

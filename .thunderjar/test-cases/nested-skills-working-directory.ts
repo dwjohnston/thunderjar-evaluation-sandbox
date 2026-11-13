@@ -6,15 +6,15 @@ import { declareTestCase } from "thunderjar";
 //   nested-root: 🔴,    cherry
 //   nested-a:    🔴 🟢, apple
 //   nested-b:    🔴 🔵, banana
-// Each harness needs its own key: ANTHROPIC_API_KEY, COPILOT_GITHUB_TOKEN and OPENCODE_API_KEY.
+// Claude Code needs ANTHROPIC_API_KEY. Copilot and OpenCode run on OpenRouter, and need OPENROUTER_API_KEY.
 export default declareTestCase({
   baseImage: ["node20"],
   codeState: ["nested-root", "nested-a", "nested-b"],
   promptSet: ["none"],
   harnessModel: [
     "claude-code-2.1.311/claude-haiku-5-5",
-    "copilot-1.0.105/claude-haiku-5.5",
-    "opencode-1.19.5/opencode/claude-haiku-5-5",
+    "copilot-1.0.105/anthropic/claude-haiku-5.5",
+    "opencode-1.19.5/openrouter/anthropic/claude-haiku-5.5",
   ],
   task: "what-does-a-ts-do",
   initialPrompt: ["plain"],
