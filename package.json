@@ -9,7 +9,7 @@
     "typecheck": "tsc -p .thunderjar"
   },
   "dependencies": {
-    "thunderjar": "0.3.0-preview-1912abb"
+    "thunderjar": "0.3.0-preview-00cb0b7"
   },
   "devDependencies": {
     "@types/bun": "^1.4.3",
