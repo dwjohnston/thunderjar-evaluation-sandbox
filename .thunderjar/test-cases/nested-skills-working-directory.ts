@@ -10,7 +10,7 @@ import { declareTestCase } from "thunderjar";
 export default declareTestCase({
   baseImage: ["node20"],
   codeState: ["nested-root", "nested-a", "nested-b"],
-  promptSet: ["none"],
+  promptSet: ["snerk"],
   harnessModel: [
     "claude-code-2.1.311/claude-haiku-5-5",
     "copilot-1.0.105/anthropic/claude-haiku-5.5",
