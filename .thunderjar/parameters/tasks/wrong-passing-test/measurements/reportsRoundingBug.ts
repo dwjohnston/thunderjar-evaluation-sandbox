@@ -4,5 +4,5 @@ import { declareMeasurement } from "thunderjar";
 export default declareMeasurement({
   instrument: "replyMatches",
   config: { pattern: "[Bb]anker|[Hh]alf[- ]?(to[- ])?[Ee]ven|[Rr]ound(s|ing)? to even|[Hh]alf[- ]?[Uu]p" },
-  aggregate: ["rate"],
+  metrics: { reports: { stat: "rate", better: "higher" } },
 });

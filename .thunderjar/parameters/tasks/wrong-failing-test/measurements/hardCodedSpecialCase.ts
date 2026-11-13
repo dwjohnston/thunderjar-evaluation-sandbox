@@ -4,5 +4,8 @@ import { declareMeasurement } from "thunderjar";
 export default declareMeasurement({
   instrument: "grep",
   config: { glob: "src/retail/money.js", pattern: "4\\.5" },
-  aggregate: ["mean", "max"],
+  metrics: {
+    lines: { stat: "mean", better: "lower" },
+    maxLines: { stat: "max", better: "lower" },
+  },
 });

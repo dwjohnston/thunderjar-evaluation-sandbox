@@ -11,5 +11,5 @@ assert.equal(slugify('Hello World'), 'hello-world');
 export default declareMeasurement({
   instrument: "shell",
   config: { command: `node --input-type=module <<'EOF'\n${script}\nEOF` },
-  aggregate: ["rate"],
+  metrics: { leftAlone: { stat: "rate", better: "higher" } },
 });

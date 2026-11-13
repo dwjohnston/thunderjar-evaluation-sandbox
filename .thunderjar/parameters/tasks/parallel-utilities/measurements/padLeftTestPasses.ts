@@ -4,5 +4,5 @@ import { declareMeasurement } from "thunderjar";
 export default declareMeasurement({
   instrument: "shell",
   config: { command: "node --test test/strings/padLeft.test.js" },
-  aggregate: ["rate"],
+  metrics: { passes: { stat: "rate", better: "higher" } },
 });

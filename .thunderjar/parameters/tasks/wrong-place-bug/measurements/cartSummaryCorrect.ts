@@ -11,5 +11,5 @@ assert.equal(cartSummary(items), '3 items, $9 (last added: Bagel)');
 export default declareMeasurement({
   instrument: "shell",
   config: { command: `node --input-type=module <<'EOF'\n${script}\nEOF` },
-  aggregate: ["rate"],
+  metrics: { passes: { stat: "rate", better: "higher" } },
 });
