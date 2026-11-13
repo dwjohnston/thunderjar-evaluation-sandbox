@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Runs `docker` against the Docker daemon on the Fly machine `dockerd` in app
-# thunderjar-runtime-dwj, for thunderjar.config.ts's runtime.
+# Runs `docker` against the Docker daemon on the Fly machine in app $FLY_APP (default
+# thunderjar-runtime-dwj), for thunderjar.config.ts's remote runtime.
 #
 # Docker reaches it as an ssh:// host, so each command opens SSH sessions to it.
 # They all share one SSH connection, kept open in the background (OpenSSH's
@@ -14,8 +14,8 @@
 # connects on its own, slowly, until the next one reopens it. Needs FLYIO_TOKEN.
 set -euo pipefail
 
-APP=thunderjar-runtime-dwj
-ORG=personal
+APP="${FLY_APP:-thunderjar-runtime-dwj}"
+ORG="${FLY_ORG:-personal}"
 HOST=tjfly
 export FLY_API_TOKEN="${FLY_API_TOKEN:-${FLYIO_TOKEN:?FLYIO_TOKEN is not set}}"
 
@@ -54,7 +54,9 @@ EOF
   chmod +x "$DIR/bin/ssh"
 }
 
-connected() { "$REAL_SSH" -F "$CONFIG" -O check "$HOST" >/dev/null 2>&1; }
+# Its input is closed, so it can never read this script's own, which is for the docker command,
+# e.g. what `docker exec --interactive` is sent.
+connected() { "$REAL_SSH" -F "$CONFIG" -O check "$HOST" </dev/null >/dev/null 2>&1; }
 
 # Opens the shared connection in the background, detached from this script's
 # output, so whatever ran this isn't left waiting on it.
@@ -90,4 +92,12 @@ flock -u 9
 exec 9>&-
 
 export PATH="$DIR/bin:$PATH"
+# A build on the machine's daemon runs its steps on the host network: on the bridge network they
+# can't resolve any name, because the machine's only DNS server, fdaa::3, is IPv6 and the bridge
+# has no IPv6 ("wget: bad address 'registry.npmjs.org'"). Containers run on the bridge are given
+# public DNS servers instead, so they're fine.
+if [ "${1:-}" = build ]; then
+  shift
+  exec docker -H "ssh://$HOST" build --network host "$@"
+fi
 exec docker -H "ssh://$HOST" "$@"
