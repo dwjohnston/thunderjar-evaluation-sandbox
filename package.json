@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "tj": "DOCKER_DEFAULT_PLATFORM=linux/amd64 thunderjar"
+    "tj": "DOCKER_DEFAULT_PLATFORM=linux/amd64 thunderjar",
+    "typecheck": "tsc -p .thunderjar"
   },
   "dependencies": {
-    "thunderjar": "^0.3.0-preview-de63488"
+    "thunderjar": "0.3.0-preview-1912abb"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
   }
 }
