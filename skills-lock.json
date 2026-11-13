@@ -5,13 +5,13 @@
       "source": "dwjohnston/thunderjar",
       "sourceType": "github",
       "skillPath": "skills/tj-config/SKILL.md",
-      "computedHash": "7b3fda6a835a226456d287e87ae622cdbc9f182cb2c87feb2a440a1bc305de22"
+      "computedHash": "a081c7f42de72c4bc19b3e54a566ac8e794162d77a54f7610deb3d6dd00e330f"
     },
     "tj-eval": {
       "source": "dwjohnston/thunderjar",
       "sourceType": "github",
       "skillPath": "skills/tj-eval/SKILL.md",
-      "computedHash": "d5e639e43dd40034d474fa58f33c7fa71fed3bcec25079dd1da0239196179f3b"
+      "computedHash": "b489b504ae8aad6bd96a0956299a1438f462228b9fa11b49e625aaaf495db149"
     },
     "tj-quick-capture": {
       "source": "dwjohnston/thunderjar",

@@ -19,18 +19,14 @@ export default declareConfig({
   runDataStore: localRunData
     ? sqliteStore({ path: "./.thunderjar/.data/runs.sqlite" })
     : postgresStore({ urlEnv: "THUNDERJAR_DB_URL" }),
-  // Containers run on a Docker daemon on Fly.io (app thunderjar-runtime-dwj, in syd). Use
-  // `run --local` to run on this machine instead.
-  // Before each execution, fly-runtime.sh claims the machine, starts it, and sizes it for the
-  // containers that run at once (half a CPU and 1 GB each). After, it releases it. The machine
-  // stops itself after an hour idle (FLY_IDLE_MINUTES): see fly-machine-init.sh. Executions from
-  // here and from Thunderjar's own repository share it. `run --concurrency <n>` overrides 16 for
-  // one execution, and the machine is sized to match. Both scripts need FLYIO_TOKEN.
+  // Containers run on a Docker daemon on a Fly.io machine, in app thunderjar-runtime-dwj (syd),
+  // shared with Thunderjar's own repository. FLY_MACHINE picks which of the app's machines. Thunderjar
+  // doesn't start, stop or clear it down: run `.thunderjar/fly-machine.sh start` before working,
+  // `prune` when its disk fills, and `stop` when done. Use `run --local` to run on this machine
+  // instead. `run --concurrency <n>` overrides 16 for one execution. The scripts need FLYIO_TOKEN.
   runtime: {
     command: ["./.thunderjar/fly-docker.sh"],
     concurrency: 16,
-    beforeExecution: ["./.thunderjar/fly-runtime.sh", "up"],
-    afterExecution: ["./.thunderjar/fly-runtime.sh", "down"],
     ...(onRuntime && { runner: { registryLogin: { usernameEnv: "GHCR_USER", passwordEnv: "GHCR_TOKEN" } } }),
   },
 });
