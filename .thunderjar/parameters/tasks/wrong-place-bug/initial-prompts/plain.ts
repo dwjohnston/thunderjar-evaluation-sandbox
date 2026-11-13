@@ -1,6 +1,6 @@
-import { declareInitialPrompt } from "thunderjar";
+import { declareInitialPrompt, writePrompt } from "thunderjar";
 
 export default declareInitialPrompt({
-  prompt: "Fix the issue described in ISSUE.md.",
+  applyParameter: () => writePrompt("Fix the issue described in ISSUE.md."),
   timeoutSeconds: 900,
 });
