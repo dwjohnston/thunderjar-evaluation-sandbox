@@ -256,6 +256,16 @@ bun install
 bun run tj run nested-skills-working-directory
 ```
 
-That runs it on the Fly runtime in `.thunderjar/thunderjar.config.ts`, which also needs `FLYIO_TOKEN`, `THUNDERJAR_DB_URL` and a `docker login ghcr.io` that can push. Add `--local` to run the containers on this machine instead, and set `THUNDERJAR_RUN_DATA=sqlite` to record the runs in a local file instead of Postgres.
+That runs it on the Fly runtime in `.thunderjar/thunderjar.config.ts`, which also needs `FLYIO_TOKEN`, `THUNDERJAR_DB_URL` and a `docker login ghcr.io` that can push. Start the Fly machine first, and stop it when you're done. `FLY_MACHINE` picks which of the app's machines:
+
+```bash
+.thunderjar/fly-machine.sh start
+```
+
+```bash
+.thunderjar/fly-machine.sh stop
+```
+
+Add `--local` to run the containers on this machine instead, and set `THUNDERJAR_RUN_DATA=sqlite` to record the runs in a local file instead of Postgres.
 
 The code states clone this repository at a pinned commit, `23cae33`, in `.thunderjar/shared/nestedSkillsCodeState.ts`. It is from before the repository had Thunderjar's skills in `.agents/skills/` and `.claude/skills/` at its root. A newer commit has them, and a harness may load them as well as the nested skills. So after changing `nested-skills/`, push the change, update the commit, and have the code state remove those two folders.
