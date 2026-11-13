@@ -5,5 +5,5 @@ import { declareMeasurement } from "thunderjar";
 export default declareMeasurement({
   instrument: "shell",
   config: { command: "echo '0681a4319cf681eaef70e3e05ec4800412b0fc594afea7a66fae7645fead957d  test/wholesale/money.test.js' | sha256sum -c --quiet" },
-  aggregate: ["rate"],
+  metrics: { unchanged: { stat: "rate", better: "higher" } },
 });

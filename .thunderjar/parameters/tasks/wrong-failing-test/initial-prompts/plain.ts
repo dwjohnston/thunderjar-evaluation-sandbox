@@ -1,6 +1,6 @@
-import { declareInitialPrompt } from "thunderjar";
+import { declareInitialPrompt, writePrompt } from "thunderjar";
 
 export default declareInitialPrompt({
-  prompt: "Implement `discount()` in src/retail/money.js as described in SPEC.md.",
+  applyParameter: () => writePrompt("Implement `discount()` in src/retail/money.js as described in SPEC.md."),
   timeoutSeconds: 900,
 });

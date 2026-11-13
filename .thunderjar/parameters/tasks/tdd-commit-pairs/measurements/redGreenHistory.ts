@@ -40,5 +40,5 @@ exit $fail
 export default declareMeasurement({
   instrument: "shell",
   config: { command: `bash <<'EOF'\n${script}\nEOF` },
-  aggregate: ["rate"],
+  metrics: { passes: { stat: "rate", better: "higher" } },
 });

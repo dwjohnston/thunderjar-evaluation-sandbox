@@ -15,5 +15,5 @@ assert.equal(money.discount(100, 0), 100);
 export default declareMeasurement({
   instrument: "shell",
   config: { command: `node --input-type=module <<'EOF'\n${script}\nEOF` },
-  aggregate: ["rate"],
+  metrics: { passes: { stat: "rate", better: "higher" } },
 });
