@@ -1,7 +1,72 @@
-import { declareHarness, writeModel, writeRunScript } from "thunderjar";
+import { declareHarness, type TokenCosts, writeModel, writeRunScript } from "thunderjar";
 
 // OpenCode, on OpenCode Zen. OPENCODE_API_KEY is an OpenCode Zen key.
 // A test case names a model by the ID the agent takes, e.g. "opencode-1.19.5/opencode/claude-haiku-5-5".
+//
+// The reply and token parsing are ported from Thunderjar's own opencode-1.19.5 harness, which runs
+// OpenCode on OpenRouter instead. This one keeps OpenCode Zen.
+
+// `opencode run --format json` writes one JSON event per line: {type, timestamp, sessionID, part}.
+// The reply is in "text" events and the tokens in "step_finish" events, one per model call. Only the
+// main session's events are written, so sub-agents' tokens aren't counted.
+type Part = {
+  text?: unknown;
+  cost?: unknown;
+  tokens?: { input?: unknown; output?: unknown; reasoning?: unknown; cache?: { read?: unknown; write?: unknown } };
+};
+type Event = { type?: unknown; part?: Part };
+
+function events(raw: string): Event[] {
+  return raw.split("\n").flatMap((line) => {
+    try {
+      const parsed = JSON.parse(line);
+      return typeof parsed === "object" && parsed !== null ? [parsed as Event] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
+const count = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined);
+
+/** The text of the last step, i.e. after the last "step_start": the agent's final reply. */
+function opencodeReply(raw: string): string {
+  const all = events(raw);
+  const lastStep = all.findLastIndex((e) => e.type === "step_start");
+  const texts = all.slice(lastStep + 1).flatMap((e) => (e.type === "text" && typeof e.part?.text === "string" ? [e.part.text] : []));
+  if (texts.length === 0) throw new Error("no text event in OpenCode's JSON output");
+  return texts.join("\n");
+}
+
+/**
+ * Every step's tokens, summed. OpenCode already takes cached tokens out of `input`, but it takes
+ * reasoning out of `output`, so reasoning is added back: it's billed as output. Its `cost` is its
+ * own estimate in dollars, from the models.dev price table, not what the provider charged.
+ */
+function opencodeTokenCosts(raw: string, ctx: { modelId: string }): TokenCosts {
+  const all = events(raw);
+  const steps = all.filter((e) => e.type === "step_finish");
+  // OpenCode's events, but no step finished, e.g. its first model call failed: it reported no
+  // tokens. Only output with no events at all is unparseable.
+  if (steps.length === 0) return { outcome: "unavailable", reason: all.length > 0 ? "notReported" : "unparseable" };
+  let inputTokens = 0, outputTokens = 0, cacheReadTokens = 0, cacheCreationTokens = 0, costUsd = 0;
+  for (const { part } of steps) {
+    const t = part?.tokens;
+    const values = [t?.input, t?.output, t?.reasoning, t?.cache?.read, t?.cache?.write].map(count);
+    if (values.some((n) => n === undefined)) return { outcome: "unavailable", reason: "unparseable" };
+    const [input, output, reasoning, read, write] = values as [number, number, number, number, number];
+    inputTokens += input;
+    outputTokens += output + reasoning;
+    cacheReadTokens += read;
+    cacheCreationTokens += write;
+    costUsd += count(part?.cost) ?? 0;
+  }
+  if (inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens === 0) return { outcome: "unavailable", reason: "notReported" };
+  // A model missing from OpenCode's price table costs 0 there, so 0 means "unknown", not free.
+  const cost = costUsd > 0 ? { costUsd, costBasis: "list" as const } : {};
+  return { outcome: "collected", models: [{ model: ctx.modelId, inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens, ...cost }] };
+}
+
 export default declareHarness({
   version: "1.19.5",
   applyParameter: (_config, ctx) =>
@@ -13,35 +78,7 @@ export default declareHarness({
       writeRunScript(`opencode run --model "$(cat /thunderjar/model.txt)" --format json "$(cat /thunderjar/prompt.txt)" > /thunderjar/result.json`),
       "USER node",
     ].join("\n"),
-  collectReply: openCodeReply,
+  collectReply: opencodeReply,
+  collectTokenCosts: opencodeTokenCosts,
   requiredEnv: ["OPENCODE_API_KEY"],
 });
-
-type OpenCodeEvent = { type?: unknown; part?: { type?: unknown; text?: unknown; messageID?: unknown } };
-
-/**
- * The agent's final reply, from what `opencode run --format json` wrote: one JSON event per line.
- * Each finished text part is a `text` event, and each step of the agent loop is its own message,
- * so the reply is the text of the last message that has any, like Claude Code's `result`.
- */
-export function openCodeReply(raw: string): string {
-  const texts: { messageID: unknown; text: string }[] = [];
-  for (const line of raw.split("\n")) {
-    if (!line.trim()) continue;
-    let event: OpenCodeEvent;
-    try {
-      event = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    const part = event.part;
-    if (event.type === "text" && typeof part?.text === "string") texts.push({ messageID: part.messageID, text: part.text });
-  }
-  const last = texts.at(-1);
-  if (!last) throw new Error("OpenCode wrote no text events");
-  return texts
-    .filter((t) => t.messageID === last.messageID)
-    .map((t) => t.text)
-    .join("\n")
-    .trim();
-}

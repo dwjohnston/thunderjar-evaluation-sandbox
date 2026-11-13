@@ -1,8 +1,69 @@
-import { declareHarness, writeModel, writeRunScript } from "thunderjar";
+import { declareHarness, type ModelTokenCosts, type TokenCosts, writeModel, writeRunScript } from "thunderjar";
 
 // GitHub Copilot CLI. COPILOT_GITHUB_TOKEN is a GitHub token with Copilot access: a fine-grained
 // personal access token with the "Copilot Requests" permission.
 // A test case names a model by the ID the agent takes, e.g. "copilot-1.0.105/claude-haiku-5.5".
+//
+// The reply and token parsing are ported from Thunderjar's own copilot-1.0.105 harness, which runs
+// Copilot on OpenRouter instead. This one keeps Copilot's own GitHub auth and model routing.
+
+// Copilot's JSONL output (`--output-format json`) leaves out its token events, so the run script also has it
+// write its usage statistics to a file, and appends them to the result file as one more line:
+// {"type":"thunderjar.usage","data":<the usage file>}.
+const USAGE_TYPE = "thunderjar.usage";
+const USAGE_FILE = "/tmp/copilot-usage.json";
+
+type Event = { type?: unknown; agentId?: unknown; data?: Record<string, unknown> };
+
+/** Each JSON line of a result file. Lines that aren't JSON objects are skipped. */
+function events(raw: string): Event[] {
+  return raw.split("\n").flatMap((line) => {
+    try {
+      const parsed = JSON.parse(line);
+      return typeof parsed === "object" && parsed !== null ? [parsed as Event] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
+const count = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined);
+
+/** The main agent's last message with text: its final reply. Sub-agents' messages have an agentId. */
+function copilotReply(raw: string): string {
+  const messages = events(raw).filter((e) => e.type === "assistant.message" && e.agentId === undefined);
+  const reply = messages.map((e) => e.data?.content).findLast((content) => typeof content === "string" && content.trim() !== "");
+  if (typeof reply !== "string") throw new Error("no assistant.message with content in Copilot's JSONL output");
+  return reply;
+}
+
+/**
+ * Tokens per model, from the usage line the run script appended. Copilot's `inputTokens` include cached
+ * reads and writes, so they're subtracted to fit Thunderjar's separate buckets. Its `cost` is a
+ * premium-request multiplier, not dollars, so no cost is reported.
+ */
+function copilotTokenCosts(raw: string): TokenCosts {
+  const usage = events(raw).findLast((e) => e.type === USAGE_TYPE)?.data;
+  const metrics = usage?.modelMetrics;
+  if (typeof metrics !== "object" || metrics === null) return { outcome: "unavailable", reason: "unparseable" };
+  const models: ModelTokenCosts[] = [];
+  for (const [model, metric] of Object.entries(metrics as Record<string, { usage?: Record<string, unknown> }>)) {
+    const [input, output, cacheRead, cacheWrite] = ["inputTokens", "outputTokens", "cacheReadTokens", "cacheWriteTokens"].map((k) => count(metric.usage?.[k]));
+    if ([input, output, cacheRead, cacheWrite].some((n) => n === undefined)) return { outcome: "unavailable", reason: "unparseable" };
+    models.push({
+      model,
+      inputTokens: Math.max(0, input! - cacheRead! - cacheWrite!),
+      outputTokens: output!,
+      cacheReadTokens: cacheRead!,
+      cacheCreationTokens: cacheWrite!,
+    });
+  }
+  const total = models.reduce((sum, m) => sum + m.inputTokens + m.outputTokens + m.cacheCreationTokens + m.cacheReadTokens, 0);
+  if (total === 0) return { outcome: "unavailable", reason: "notReported" };
+  const apiDurationMs = count(usage?.totalApiDurationMs);
+  return { outcome: "collected", models, ...(apiDurationMs !== undefined && { apiDurationMs }) };
+}
+
 export default declareHarness({
   version: "1.0.105",
   applyParameter: (_config, ctx) =>
@@ -11,16 +72,17 @@ export default declareHarness({
       "RUN mkdir -p /thunderjar && chown -R node:node /workspace /thunderjar",
       writeModel(ctx.modelId),
       // The prompt and model are read from their files, so quotes and newlines reach the agent intact.
-      // `--silent` prints only the agent's response, without tool calls or usage stats.
-      writeRunScript(`copilot -p "$(cat /thunderjar/prompt.txt)" --model "$(cat /thunderjar/model.txt)" --allow-all-tools --no-color --silent > /thunderjar/result.json`),
+      // Copilot's exit code is kept as the script's, after the usage line is appended.
+      writeRunScript(
+        `rm -f ${USAGE_FILE}; ` +
+          `copilot -p "$(cat /thunderjar/prompt.txt)" --model "$(cat /thunderjar/model.txt)" --allow-all-tools --no-color` +
+          ` --output-format json --usage-output-file ${USAGE_FILE} > /thunderjar/result.json; code=$?; ` +
+          `[ -f ${USAGE_FILE} ] && printf '{"type":"${USAGE_TYPE}","data":%s}\\n' "$(tr -d '\\n' < ${USAGE_FILE})" >> /thunderjar/result.json; ` +
+          `exit $code`,
+      ),
       "USER node",
     ].join("\n"),
-  // With `--silent`, the result file is the agent's response as plain text. If the agent writes
-  // more than one message, they're all in it, not only the last.
-  collectReply: (raw) => {
-    const reply = raw.trim();
-    if (!reply) throw new Error("Copilot printed no response");
-    return reply;
-  },
+  collectReply: copilotReply,
+  collectTokenCosts: copilotTokenCosts,
   requiredEnv: ["COPILOT_GITHUB_TOKEN"],
 });
